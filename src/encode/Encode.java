@@ -30,6 +30,7 @@ public final class Encode {
      * @param filePath
      */
     private void count(String filePath) {
+    	int num=0;
     	File file=new File(filePath);
     	if(!file.exists())
     		return;
@@ -76,12 +77,14 @@ public final class Encode {
     	count++;
     	double left=0.0;
     	for(Entry<Character, Integer> en:map.entrySet()) {
+    		num++;
     		char c=en.getKey();
     		double right=left+(double)en.getValue()/(double)count;
     		Interval in=new Interval(left, right);
     		charMap.put(c,in);
     		left=right;
     	}
+    	System.out.println(num);
     }
     
     /**
@@ -92,11 +95,17 @@ public final class Encode {
      * @return
      */
     public boolean encode(String filePath,String outFilePath) {
+    	int bytenum=0;
     	File file=new File(filePath);
     	File outFile=new File(outFilePath);
     	if(!file.exists())
     		return false;
     	count(filePath);
+    	for(Entry<Character, Interval> en:charMap.entrySet()) {
+    		if(en.getValue().getLeft().equals(en.getValue().getRight()))
+    			System.out.println(en.getKey());
+    		//System.out.println(en.getKey()+" "+en.getValue().getLeft()+" "+en.getValue().getRight());
+    	}
     	DataInputStream dis=null;
     	DataOutputStream dos=null;
     	
@@ -121,8 +130,10 @@ public final class Encode {
     			border=en.getValue().getRight();
     			dos.writeByte(strToByte(border.substring(0, 8)));
     			dos.writeByte(strToByte(border.substring(8)));
+    			//bytenum+=4;
     		}
     		dos.writeChar('$');//码本结束标识
+    		//bytenum+=2;
     		
     		char firstChar=(char)dis.readByte();
     		boolean tran=(firstChar=='$')?true:false; //转义控制
@@ -150,7 +161,7 @@ public final class Encode {
     				else {
     					if(end==2)    //结束表示 ->$e
     						c='$';
-    					else 
+    					else
     						c='e';
     					end--;
     				}
@@ -171,11 +182,13 @@ public final class Encode {
     			//文件输出
     			while(bufferStr.length()>=8) {
     				dos.writeByte(strToByte(bufferStr.substring(0,8)));
+    				bytenum++;
     				bufferStr=bufferStr.substring(8);
     			}
     		}
     		bufferStr+='1';//结束区间应在low与high之间，故加一
     		dos.writeByte(strToByte(bufferStr));
+    		bytenum++;
     	}catch(IOException ioe) {
     		ioe.printStackTrace();
     	}finally {
@@ -188,6 +201,7 @@ public final class Encode {
     			e.printStackTrace();
     		}
     	}
+    	System.out.println(bytenum);
     	return true;
     }
     
@@ -206,5 +220,8 @@ public final class Encode {
     	}
     	return (byte)count;
     }
-    
+    public static void main(String[] args) {
+    	Encode en=new Encode();
+    	en.encode("f://one.txt", "f://a");
+    }
 }

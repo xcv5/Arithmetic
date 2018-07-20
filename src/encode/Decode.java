@@ -175,4 +175,9 @@ public final class Decode {
     	}
     	return null;
     }
+    
+    public static void main(String[] args) {
+    	Decode de=new Decode();
+    	de.decode("f://a", "f://c");
+    }
 }
